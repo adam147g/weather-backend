@@ -73,11 +73,10 @@ public class WeatherService {
     private WeatherSummary processWeeklyData(WeatherResponse response) {
         WeatherResponse.Daily daily = response.daily();
         WeatherResponse.Hourly hourly = response.hourly();
-        double averageSurface = 0;
-        for (int i = 0; i < hourly.surface_pressure().size(); i++) {
-            averageSurface += hourly.surface_pressure().get(i);
-        }
-        averageSurface /= hourly.surface_pressure().size();
+        double averageSurface = hourly.surface_pressure().stream()
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0);
 
         double averageSunshineDuration = 0;
         double minTemperature = Double.MAX_VALUE;

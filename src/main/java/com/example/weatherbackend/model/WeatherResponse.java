@@ -4,7 +4,6 @@ import java.util.List;
 
 public record WeatherResponse(
         Daily daily,
-        DailyUnits daily_units,
         Hourly hourly
 ) {
     public record Daily(
