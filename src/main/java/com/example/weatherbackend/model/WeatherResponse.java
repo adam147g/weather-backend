@@ -1,22 +1,30 @@
 package com.example.weatherbackend.model;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
-@Data
-@NoArgsConstructor
-public class WeatherResponse {
-    private Daily daily;
+public record WeatherResponse(
+        Daily daily,
+        DailyUnits daily_units
+) {
+    public record Daily(
+            List<String> time,
+            List<Integer> weather_code,
+            List<Double> temperature_2m_min,
+            List<Double> temperature_2m_max,
+            List<Double> sunshine_duration
+    ) {
+    }
 
-    @Data
-    @NoArgsConstructor
-    public static class Daily {
-        private List<String> time;
-        private List<Integer> weather_code;
-        private List<Double> temperature_2m_min;
-        private List<Double> temperature_2m_max;
-        private List<Double> sunshine_duration;
+    public record DailyUnits(
+            String date,
+            String weatherCode,
+            String minTemperature,
+            String maxTemperature,
+            String estimatedEnergy
+    ) {
+        public DailyUnits() {
+            this("YYYY-MM-DD", "wmo code", "°C", "°C", "kWh");
+        }
     }
 }
+

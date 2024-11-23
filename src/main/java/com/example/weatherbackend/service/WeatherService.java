@@ -34,18 +34,18 @@ public class WeatherService {
 
     private List<DailyForecast> processWeatherData(WeatherResponse response) {
         List<DailyForecast> forecasts = new ArrayList<>();
-        WeatherResponse.Daily daily = response.getDaily();
+        WeatherResponse.Daily daily = response.daily();
 
-        for (int i = 0; i < daily.getTime().size(); i++) {
-            double sunshineHours = daily.getSunshine_duration().get(i) / 3600; // sekundy na godziny
+        for (int i = 0; i < daily.time().size(); i++) {
+            double sunshineHours = daily.sunshine_duration().get(i) / 3600; // sekundy na godziny
 
             double estimatedEnergy = SOLAR_PANEL_POWER * sunshineHours * PANEL_EFFICIENCY;
             estimatedEnergy = round(estimatedEnergy, 3);
             forecasts.add(new DailyForecast(
-                    daily.getTime().get(i),
-                    daily.getWeather_code().get(i),
-                    daily.getTemperature_2m_min().get(i),
-                    daily.getTemperature_2m_max().get(i),
+                    daily.time().get(i),
+                    daily.weather_code().get(i),
+                    daily.temperature_2m_min().get(i),
+                    daily.temperature_2m_max().get(i),
                     estimatedEnergy
             ));
         }
@@ -60,5 +60,9 @@ public class WeatherService {
         value = value * factor;
         long tmp = Math.round(value);
         return (double) tmp / factor;
+    }
+
+    public WeatherResponse.DailyUnits getDailyUnits() {
+        return new WeatherResponse.DailyUnits();
     }
 }
