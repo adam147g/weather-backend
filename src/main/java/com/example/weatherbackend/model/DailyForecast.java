@@ -6,4 +6,5 @@ public record DailyForecast(
         double minTemperature,
         double maxTemperature,
         double estimatedEnergy
-) {}
+) {
+}

@@ -4,14 +4,16 @@ import java.util.List;
 
 public record WeatherResponse(
         Daily daily,
-        DailyUnits daily_units
+        DailyUnits daily_units,
+        Hourly hourly
 ) {
     public record Daily(
             List<String> time,
             List<Integer> weather_code,
             List<Double> temperature_2m_min,
             List<Double> temperature_2m_max,
-            List<Double> sunshine_duration
+            List<Double> sunshine_duration,
+            List<Double> rain_sum
     ) {
     }
 
@@ -24,6 +26,22 @@ public record WeatherResponse(
     ) {
         public DailyUnits() {
             this("YYYY-MM-DD", "wmo code", "°C", "°C", "kWh");
+        }
+    }
+
+    public record Hourly(
+            List<Double> surface_pressure
+    ) {
+    }
+
+    public record WeeklySummaryUnits(
+            String averageSurfacePressure,
+            String averageSunshineDuration,
+            String minTemperature,
+            String maxTemperature
+    ) {
+        public WeeklySummaryUnits() {
+            this("hPa", "s", "°C", "°C");
         }
     }
 }

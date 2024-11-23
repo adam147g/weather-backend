@@ -2,6 +2,7 @@ package com.example.weatherbackend.controller;
 
 import com.example.weatherbackend.exceptions.WeatherDataNotFoundException;
 import com.example.weatherbackend.model.DailyForecast;
+import com.example.weatherbackend.model.WeatherSummary;
 import com.example.weatherbackend.service.WeatherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,19 @@ public class WeatherController {
             Map<String, Object> response = new HashMap<>();
             response.put("daily", forecast);
             response.put("daily_units", weatherService.getDailyUnits());
+            return ResponseEntity.ok(response);
+        } catch (WeatherDataNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+    @GetMapping("/weekly-summary")
+    public ResponseEntity<Map<String, Object>> getWeekSummary(@RequestParam double latitude, @RequestParam double longitude) {
+        try {
+            WeatherSummary summary = weatherService.getWeekSummary(latitude, longitude);
+            Map<String, Object> response = new HashMap<>();
+            response.put("summary", summary);
+            response.put("weekly_summary_units", weatherService.getWeeklySummaryUnits());
             return ResponseEntity.ok(response);
         } catch (WeatherDataNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);

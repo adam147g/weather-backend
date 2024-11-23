@@ -3,12 +3,14 @@ package com.example.weatherbackend.service;
 import com.example.weatherbackend.exceptions.WeatherDataNotFoundException;
 import com.example.weatherbackend.model.DailyForecast;
 import com.example.weatherbackend.model.WeatherResponse;
+import com.example.weatherbackend.model.WeatherSummary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 @Service
 public class WeatherService {
@@ -53,6 +55,45 @@ public class WeatherService {
         return forecasts;
     }
 
+    public WeatherSummary getWeekSummary(double latitude, double longitude) {
+        String string_latitude = String.format("%.6f", latitude).replace(",", ".");
+        String string_longitude = String.format("%.6f", longitude).replace(",", ".");
+
+        String url = String.format(
+                "https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&hourly=surface_pressure&daily=temperature_2m_max,temperature_2m_min,sunshine_duration,rain_sum&timezone=auto",
+                string_latitude, string_longitude);
+
+        WeatherResponse response = restTemplate.getForObject(url, WeatherResponse.class);
+        if (response == null) {
+            throw new WeatherDataNotFoundException("Nie udało się pobrać danych pogodowych.");
+        }
+        return processWeeklyData(response);
+    }
+
+    private WeatherSummary processWeeklyData(WeatherResponse response) {
+        WeatherResponse.Daily daily = response.daily();
+        WeatherResponse.Hourly hourly = response.hourly();
+        double averageSurface = 0;
+        for (int i = 0; i < hourly.surface_pressure().size(); i++) {
+            averageSurface += hourly.surface_pressure().get(i);
+        }
+        averageSurface /= hourly.surface_pressure().size();
+
+        double averageSunshineDuration = 0;
+        double minTemperature = Double.MAX_VALUE;
+        double maxTemperature = Double.MIN_VALUE;
+        double rainyDays = 0;
+        for (int i = 0; i < daily.time().size(); i++) {
+            averageSunshineDuration += daily.sunshine_duration().get(i);
+            minTemperature = Math.min(minTemperature, daily.temperature_2m_min().get(i));
+            maxTemperature = Math.max(maxTemperature, daily.temperature_2m_max().get(i));
+            if (daily.rain_sum().get(i) > 0)
+                rainyDays++;
+        }
+        averageSunshineDuration /= daily.time().size();
+        return new WeatherSummary(round(averageSurface, 4), round(averageSunshineDuration, 2), minTemperature, maxTemperature, rainyDays > 3 ? "Rainy" : "Not rainy");
+    }
+
     public static double round(double value, int places) {
         if (places < 0) throw new IllegalArgumentException();
 
@@ -64,5 +105,9 @@ public class WeatherService {
 
     public WeatherResponse.DailyUnits getDailyUnits() {
         return new WeatherResponse.DailyUnits();
+    }
+
+    public WeatherResponse.WeeklySummaryUnits getWeeklySummaryUnits() {
+        return new WeatherResponse.WeeklySummaryUnits();
     }
 }
