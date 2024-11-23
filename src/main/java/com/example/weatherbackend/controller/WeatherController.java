@@ -7,15 +7,13 @@ import com.example.weatherbackend.service.WeatherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@CrossOrigin(origins = "http://localhost:3000/")
 @RestController
 @RequestMapping("/api/weather")
 public class WeatherController {
@@ -27,7 +25,7 @@ public class WeatherController {
         try {
             List<DailyForecast> forecast = weatherService.get7DayForecast(latitude, longitude);
             Map<String, Object> response = new HashMap<>();
-            response.put("daily", forecast);
+            response.put("days", forecast);
             response.put("daily_units", weatherService.getDailyUnits());
             return ResponseEntity.ok(response);
         } catch (WeatherDataNotFoundException e) {
@@ -40,7 +38,7 @@ public class WeatherController {
         try {
             WeatherSummary summary = weatherService.getWeekSummary(latitude, longitude);
             Map<String, Object> response = new HashMap<>();
-            response.put("summary", summary);
+            response.put("weekly_summary", summary);
             response.put("weekly_summary_units", weatherService.getWeeklySummaryUnits());
             return ResponseEntity.ok(response);
         } catch (WeatherDataNotFoundException e) {
