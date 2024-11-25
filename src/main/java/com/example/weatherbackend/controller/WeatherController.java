@@ -20,17 +20,21 @@ import java.util.Map;
 @RequestMapping("/api/weather")
 @Validated
 public class WeatherController {
+
     @Autowired
     private WeatherService weatherService;
 
     @GetMapping("/7-day-forecast")
-    public ResponseEntity<Map<String, Object>> get7DayForecast(@RequestParam double latitude, @RequestParam double longitude) {
+    public ResponseEntity<Map<String, Object>> get7DayForecast(
+            @RequestParam String latitude,
+            @RequestParam String longitude) {
         try {
-            if (latitude > 90 || latitude < -90 || longitude > 180 || longitude < -180) {
-                throw new InvalidInputException("Szerokość geograficzna musi mieścić się w przedziale [-90, 90], długość geograficzna w przedziale [-180, 180]");
-            }
+            // Sprawdzanie i walidacja dla szerokości i długości geograficznej
+            double lat = parseAndValidateCoordinate(latitude, "Szerokość geograficzna", -90.0, 90.0);
+            double lon = parseAndValidateCoordinate(longitude, "Długość geograficzna", -180.0, 180.0);
 
-            List<DailyForecast> forecast = weatherService.get7DayForecast(latitude, longitude);
+
+            List<DailyForecast> forecast = weatherService.get7DayForecast(lat, lon);
             Map<String, Object> response = new HashMap<>();
             response.put("days", forecast);
             response.put("daily_units", weatherService.getDailyUnits());
@@ -45,13 +49,15 @@ public class WeatherController {
     }
 
     @GetMapping("/weekly-summary")
-    public ResponseEntity<Map<String, Object>> getWeekSummary(@RequestParam double latitude, @RequestParam double longitude) {
+    public ResponseEntity<Map<String, Object>> getWeekSummary(
+            @RequestParam String latitude,
+            @RequestParam String longitude) {
         try {
-            if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-                throw new InvalidInputException("Latitude must be in range [-90, 90], Longitude must be in range [-180, 180]");
-            }
+            // Sprawdzanie i walidacja dla szerokości i długości geograficznej
+            double lat = parseAndValidateCoordinate(latitude, "Szerokość geograficzna", -90.0, 90.0);
+            double lon = parseAndValidateCoordinate(longitude, "Długość geograficzna", -180.0, 180.0);
 
-            WeatherSummary summary = weatherService.getWeekSummary(latitude, longitude);
+            WeatherSummary summary = weatherService.getWeekSummary(lat, lon);
 
             Map<String, Object> response = new HashMap<>();
             response.put("weekly_summary", summary);
@@ -62,6 +68,22 @@ public class WeatherController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (InvalidInputException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Metoda pomocnicza do parsowania i walidacji współrzędnych
+    private double parseAndValidateCoordinate(String coordinate, String coordinateName, double minValue, double maxValue) throws InvalidInputException {
+        try {
+            double value = Double.parseDouble(coordinate);
+
+            // Walidacja zakresu
+            if (value < minValue || value > maxValue) {
+                throw new InvalidInputException(coordinateName + " musi być w przedziale [" + minValue + ", " + maxValue + "]");
+            }
+
+            return value;
+        } catch (NumberFormatException e) {
+            throw new InvalidInputException(coordinateName + " musi być liczbą zmiennoprzecinkową.");
         }
     }
 }
