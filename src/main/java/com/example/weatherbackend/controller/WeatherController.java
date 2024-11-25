@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:3000/")
+@CrossOrigin(origins = {"https://weather-frontend-vqf8.onrender.com", "http://localhost:3000"})
 @RestController
 @RequestMapping("/api/weather")
 @Validated
