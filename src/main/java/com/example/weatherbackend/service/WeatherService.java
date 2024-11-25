@@ -6,6 +6,7 @@ import com.example.weatherbackend.model.WeatherResponse;
 import com.example.weatherbackend.model.WeatherSummary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -21,17 +22,21 @@ public class WeatherService {
     private RestTemplate restTemplate;
 
     public List<DailyForecast> get7DayForecast(double latitude, double longitude) {
-        String string_latitude = String.format("%.6f", latitude).replace(",", ".");
-        String string_longitude = String.format("%.6f", longitude).replace(",", ".");
+        try {
+            String string_latitude = String.format("%.6f", latitude).replace(",", ".");
+            String string_longitude = String.format("%.6f", longitude).replace(",", ".");
 
-        String url = String.format("https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&daily=weather_code,temperature_2m_min,temperature_2m_max,sunshine_duration&timezone=auto",
-                string_latitude, string_longitude);
+            String url = String.format("https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&daily=weather_code,temperature_2m_min,temperature_2m_max,sunshine_duration&timezone=auto",
+                    string_latitude, string_longitude);
 
-        WeatherResponse response = restTemplate.getForObject(url, WeatherResponse.class);
-        if (response == null) {
-            throw new WeatherDataNotFoundException("Nie udało się pobrać danych pogodowych.");
+            WeatherResponse response = restTemplate.getForObject(url, WeatherResponse.class);
+            if (response == null) {
+                throw new WeatherDataNotFoundException("Nie udało się pobrać danych pogodowych.");
+            }
+            return processWeatherData(response);
+        } catch (RestClientException e) {
+            throw new WeatherDataNotFoundException("Błąd połączenia z zewnętrznym API: " + e.getMessage());
         }
-        return processWeatherData(response);
     }
 
     private List<DailyForecast> processWeatherData(WeatherResponse response) {
@@ -56,18 +61,22 @@ public class WeatherService {
     }
 
     public WeatherSummary getWeekSummary(double latitude, double longitude) {
-        String string_latitude = String.format("%.6f", latitude).replace(",", ".");
-        String string_longitude = String.format("%.6f", longitude).replace(",", ".");
+        try {
+            String string_latitude = String.format("%.6f", latitude).replace(",", ".");
+            String string_longitude = String.format("%.6f", longitude).replace(",", ".");
 
-        String url = String.format(
-                "https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&hourly=surface_pressure&daily=temperature_2m_max,temperature_2m_min,sunshine_duration,rain_sum&timezone=auto",
-                string_latitude, string_longitude);
+            String url = String.format(
+                    "https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&hourly=surface_pressure&daily=temperature_2m_max,temperature_2m_min,sunshine_duration,rain_sum&timezone=auto",
+                    string_latitude, string_longitude);
 
-        WeatherResponse response = restTemplate.getForObject(url, WeatherResponse.class);
-        if (response == null) {
-            throw new WeatherDataNotFoundException("Nie udało się pobrać danych pogodowych.");
+            WeatherResponse response = restTemplate.getForObject(url, WeatherResponse.class);
+            if (response == null) {
+                throw new WeatherDataNotFoundException("Nie udało się pobrać danych pogodowych.");
+            }
+            return processWeeklyData(response);
+        } catch (RestClientException e) {
+            throw new WeatherDataNotFoundException("Błąd połączenia z zewnętrznym API: " + e.getMessage());
         }
-        return processWeeklyData(response);
     }
 
     private WeatherSummary processWeeklyData(WeatherResponse response) {
